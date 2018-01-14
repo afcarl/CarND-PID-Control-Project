@@ -34,6 +34,54 @@ int main()
 
   PID pid;
   // TODO: Initialize the pid variable.
+  // pid.Init(0.04, 0.00001, 10.0);
+  // pid.Init(0.045, 0.001, 10.0);
+  // pid.Init(0.05, 0.001, 10.0);
+  /**
+   * ## Effects of PID
+   *
+   * ### Effect of P:
+   * P is called the proportional term and is proportional to the error.
+   *  When P is too high, the car oscillates too much, overshoots and the system becomes unstable.
+   *  However, when P is too small, the car is not responsive enough.
+   *
+   * ### Effect of I:
+   * I is the integral term and is proportional to the total accumulated error over time.
+   * If the car has a bias, like having a bias towards the right, the integral term will take care of that.
+   * When I is too low, it does not correct the bias enough and the car will keep drifting.
+   * When I is too high, the car oscillates and the system unstable.
+   *
+   * ### Effect of D:
+   * D is the derivative term and is proportional to the derivative of the error.
+   *  It prevents the car from overshooting and oscillating around the target trajectory.
+   *  It helps with stability.
+   *  If D is too low, the car will oscillate since the derivative term won't be able to correct the effects of P and I.
+   *  If D is too high, it corrects too much and the successive steering angles vary a lot.
+   *
+   *
+   * ## How did I find better parameter?
+   *
+   *  First, I started with (0.05, 0.0000001, 0.0000001), because I would like to see the effect of parameter for propotinal
+   *  making the parameters for differential and integral. In the beginning, it went well. However, when the steering value was
+   *  high, the control was lost.
+   *
+   *  Then, I tried to increase the parameter for differencial to reduce the oscillation with (0.05, 0.00001, 0.0000001). However,
+   *  it was still bad to control the car. As a result, I got a feeling that even if the parameter for differencial is relatively small,
+   *  it could affect well.
+   *
+   *  And then, I tried to increase the parameter for integral to eliminate the bias of sensor with (0.05, 0.00001, 10.0).
+   *  It went well. But I thought that oscillations was still high a little. Especially, it was not able to run at a sharp turn on
+   *  the road.
+   *
+   *  And then, I selected the parameters with (0.042, 0.00001, 10.0), adjusting the parameter for propotinal. It seemed
+   *  to work well. However, I thought the steering control was still oscillating a little.
+   *
+   *  Finally, I run with (0.05, 0.0001, 10.0), increasing the parameter for differential. As a result, it run well!
+   */
+  // pid.Init(0.05, 0.0000001, 0.0000001);
+  // pid.Init(0.05, 0.00001, 0.0000001);
+  // pid.Init(0.05, 0.00001, 10.0);
+  pid.Init(0.05, 0.0001, 10.0);
 
   h.onMessage([&pid](uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length, uWS::OpCode opCode) {
     // "42" at the start of the message means there's a websocket message event.
@@ -57,13 +105,19 @@ int main()
           * NOTE: Feel free to play around with the throttle and speed. Maybe use
           * another PID controller to control the speed!
           */
+          pid.UpdateError(cte);
+          steer_value = pid.TotalError();
+
+          // Tweak to control the speed
+          double throttle_value = 0.3 - 0.2*fabs(steer_value);
           
           // DEBUG
           std::cout << "CTE: " << cte << " Steering Value: " << steer_value << std::endl;
 
           json msgJson;
           msgJson["steering_angle"] = steer_value;
-          msgJson["throttle"] = 0.3;
+          //  msgJson["throttle"] = 0.3;
+          msgJson["throttle"] = throttle_value;
           auto msg = "42[\"steer\"," + msgJson.dump() + "]";
           std::cout << msg << std::endl;
           ws.send(msg.data(), msg.length(), uWS::OpCode::TEXT);
