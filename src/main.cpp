@@ -33,10 +33,6 @@ int main()
   uWS::Hub h;
 
   PID pid;
-  // TODO: Initialize the pid variable.
-  // pid.Init(0.04, 0.00001, 10.0);
-  // pid.Init(0.045, 0.001, 10.0);
-  // pid.Init(0.05, 0.001, 10.0);
   /**
    * ## Effects of PID
    *
@@ -78,6 +74,7 @@ int main()
    *
    *  Finally, I run with (0.05, 0.0001, 10.0), increasing the parameter for differential. As a result, it run well!
    */
+  // TODO: Initialize the pid variable.
   // pid.Init(0.05, 0.0000001, 0.0000001);
   // pid.Init(0.05, 0.00001, 0.0000001);
   // pid.Init(0.05, 0.00001, 10.0);
